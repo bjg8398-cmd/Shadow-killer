@@ -2,798 +2,272 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Shadow Killer</title>
-
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #090b12;
-  color: white;
-  text-align: center;
-}
-
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-}
-
-h1 {
-  font-size: 42px;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  color: #aaa;
-  margin-bottom: 30px;
-}
-
-.card {
-  background: #151925;
-  border-radius: 18px;
-  padding: 22px;
-  margin: 15px 0;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  margin: 8px 0;
-  border-radius: 10px;
-  border: 1px solid #444;
-  background: #0d1018;
-  color: white;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border: 0;
-  border-radius: 10px;
-  background: #6c4cff;
-  color: white;
-  font-size: 17px;
-  font-weight: bold;
-}
-
-button:disabled {
-  opacity: .4;
-}
-
-.hidden {
-  display: none;
-}
-
-.role {
-  font-size: 30px;
-  font-weight: bold;
-  margin: 20px 0;
-}
-
-.bad {
-  color: #ff4d5a;
-}
-
-.good {
-  color: #4cff9b;
-}
-
-.special {
-  color: #ffd166;
-}
-
-.info {
-  color: #aaa;
-  line-height: 1.6;
-}
-
-.player {
-  background: #202535;
-  padding: 12px;
-  margin: 7px 0;
-  border-radius: 10px;
-}
-
-.target {
-  background: #292f42;
-  cursor: pointer;
-}
-
-.target:hover {
-  background: #3a4055;
-}
-
-.selected {
-  outline: 2px solid #6c4cff;
-}
-
-#log {
-  text-align: left;
-  max-height: 220px;
-  overflow-y: auto;
-  background: #0d1018;
-  padding: 12px;
-  border-radius: 10px;
-}
-
-hr {
-  border: 0;
-  border-top: 1px solid #333;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#080a11;color:#f5f5f7}
+.wrap{max-width:720px;margin:auto;padding:20px}
+h1{font-size:42px;text-align:center;margin:18px 0 4px}
+.sub{text-align:center;color:#a8a9b5;margin-bottom:24px}
+.card{background:#151925;border:1px solid #252a3a;border-radius:22px;padding:24px;margin:18px 0}
+h2{text-align:center}
+input,select,button{width:100%;padding:15px;border-radius:14px;border:1px solid #3a3e4e;background:#0e1119;color:white;font-size:17px;margin:7px 0}
+button{background:#6847ff;border:0;font-weight:bold;cursor:pointer}
+button.secondary{background:#292e3d}
+button.danger{background:#a8324a}
+button.good{background:#16855b}
+button:disabled{opacity:.45}
+.small{font-size:14px;color:#aaa}
+.role{font-size:32px;font-weight:bold;text-align:center;margin:18px 0}
+.center{text-align:center}
+.player{background:#202638;border-radius:14px;padding:14px;margin:8px 0}
+.alive{color:#38e58a}.dead{color:#ff657d}
+.log{background:#0e1119;border-radius:14px;padding:14px;max-height:230px;overflow:auto}
+.hidden{display:none}
+.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:#30364a;margin:3px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){h1{font-size:34px}.grid{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
-
-<div class="container">
-
+<div class="wrap">
 <h1>🌑 Shadow Killer</h1>
-<div class="subtitle">Trust no one.</div>
-
-<!-- START SCREEN -->
-<div id="startScreen" class="card">
-
-<h2>Create Game</h2>
-
-<input id="playerName" placeholder="Your name">
-
-<input
-  id="playerCount"
-  type="number"
-  min="7"
-  max="20"
-  value="8"
-  placeholder="Number of players">
-
-<button onclick="startGame()">START GAME</button>
-
-<p class="info">
-Minimum 7 players<br>
-🔪 3 Killers • 🔎 Detective • 🩺 Doctor<br>
-🤡 Fool • ⚔️ Challenger • 👤 Innocents
-</p>
-
-</div>
-
-<!-- ROLE SCREEN -->
-<div id="roleScreen" class="card hidden">
-
-<h2>Your Secret Role</h2>
-
-<div id="role" class="role"></div>
-
-<div id="roleDescription" class="info"></div>
-
-<button onclick="showGame()">Continue</button>
-
-</div>
-
-<!-- GAME SCREEN -->
-<div id="gameScreen" class="hidden">
-
-<div class="card">
-
-<h2 id="phaseTitle">🌙 Night Phase</h2>
-
-<p id="phaseText"></p>
-
-</div>
-
-<div id="actionCard" class="card hidden">
-
-<h3 id="actionTitle"></h3>
-
-<p id="actionText" class="info"></p>
-
-<div id="actionTargets"></div>
-
-<button id="actionButton" onclick="confirmAction()">
-Confirm
-</button>
-
-</div>
-
-<div class="card">
-
-<h3>Players</h3>
-
-<div id="players"></div>
-
-</div>
-
-<div class="card">
-
-<h3>Game Log</h3>
-
-<div id="log"></div>
-
-</div>
-
-</div>
-
+<div class="sub">Trust no one.</div>
+<div id="app"></div>
 </div>
 
 <script>
+const roleInfo={
+"Killer":{emoji:"🔪",desc:"Eliminate the good team and survive."},
+"Detective":{emoji:"🔎",desc:"Each night, check one player as Good or Bad."},
+"Doctor":{emoji:"🩺",desc:"You have one save and one kill power for the whole game."},
+"Fool":{emoji:"🤡",desc:"You win ONLY if the town lynches you."},
+"Challenger":{emoji:"⚔️",desc:"Before voting, challenge one player. If they are a Killer, they die. Otherwise you die."},
+"Innocent":{emoji:"🧑‍🤝‍🧑",desc:"Find the Killers and survive."}
+};
 
-let players = [];
-let myRole = "";
-let phase = "night";
-let selectedTarget = null;
-let doctorSaveUsed = false;
-let doctorKillUsed = false;
+let game=null;
 
-/*
-  FIXED SPECIAL ROLES
-
-  3 Killers
-  1 Detective
-  1 Doctor
-  1 Fool
-  1 Challenger
-
-  Everyone else = Innocent
-*/
-
-const fixedRoles = [
-  "Killer",
-  "Killer",
-  "Killer",
-  "Detective",
-  "Doctor",
-  "Fool",
-  "Challenger"
-];
-
-function startGame() {
-
-  const name =
-    document.getElementById("playerName").value.trim();
-
-  const count =
-    parseInt(document.getElementById("playerCount").value);
-
-  if (!name) {
-    alert("Enter your name first.");
-    return;
-  }
-
-  if (count < 7 || count > 20) {
-    alert("Choose between 7 and 20 players.");
-    return;
-  }
-
-  players = [];
-
-  players.push({
-    name: name,
-    role: "",
-    alive: true
-  });
-
-  for (let i = 2; i <= count; i++) {
-
-    players.push({
-      name: "Player " + i,
-      role: "",
-      alive: true
-    });
-
-  }
-
-  assignRoles();
-
-  showRole();
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function addLog(t){game.log.push(t);}
+function alive(){return game.players.filter(p=>p.alive);}
+function killers(){return game.players.filter(p=>p.alive&&p.role==="Killer");}
+function goodPlayers(){return game.players.filter(p=>p.alive&&p.role!=="Killer");}
+function winner(){
+  const aliveKillers=killers().length;
+  const aliveGood=goodPlayers().length;
+  if(game.foolWon) return "Fool";
+  if(aliveKillers===0) return "Good";
+  if(aliveKillers>=aliveGood) return "Killers";
+  return null;
+}
+function playerButtons(filter,action){
+  return game.players.map((p,i)=>{
+    if(!p.alive || !filter(p)) return "";
+    return `<button class="secondary" onclick="${action}(${i})">${esc(p.name)}</button>`;
+  }).join("");
 }
 
-function assignRoles() {
-
-  let rolePool = [...fixedRoles];
-
-  while (rolePool.length < players.length) {
-    rolePool.push("Innocent");
-  }
-
-  rolePool.sort(() => Math.random() - 0.5);
-
-  for (let i = 0; i < players.length; i++) {
-    players[i].role = rolePool[i];
-  }
-
-  myRole = players[0].role;
+function render(){
+ const a=document.getElementById("app");
+ if(!game){renderHome();return;}
+ if(game.phase==="role"){renderRole();return;}
+ if(game.phase==="night"){renderNight();return;}
+ if(game.phase==="day"){renderDay();return;}
+ if(game.phase==="vote"){renderVote();return;}
+ if(game.phase==="over"){renderOver();return;}
 }
 
-function showRole() {
-
-  document
-    .getElementById("startScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("roleScreen")
-    .classList.remove("hidden");
-
-  const roleElement =
-    document.getElementById("role");
-
-  const description =
-    document.getElementById("roleDescription");
-
-  roleElement.textContent = myRole;
-
-  if (myRole === "Killer") {
-
-    roleElement.className = "role bad";
-
-    description.innerHTML =
-      "🔪 You are a <b>Killer</b>.<br><br>" +
-      "Work with the other Killers and eliminate the good players.";
-
-  }
-
-  else if (myRole === "Detective") {
-
-    roleElement.className = "role good";
-
-    description.innerHTML =
-      "🔎 You are the <b>Detective</b>.<br><br>" +
-      "Investigate one player to discover whether they are Good or Bad.";
-
-  }
-
-  else if (myRole === "Doctor") {
-
-    roleElement.className = "role good";
-
-    description.innerHTML =
-      "🩺 You are the <b>Doctor</b>.<br><br>" +
-      "You have one Save power and one Kill power.";
-
-  }
-
-  else if (myRole === "Fool") {
-
-    roleElement.className = "role special";
-
-    description.innerHTML =
-      "🤡 You are the <b>Fool</b>.<br><br>" +
-      "<b>Your goal is to get yourself lynched.</b><br><br>" +
-      "If the players vote you out, you win.";
-
-  }
-
-  else if (myRole === "Challenger") {
-
-    roleElement.className = "role special";
-
-    description.innerHTML =
-      "⚔️ You are the <b>Challenger</b>.<br><br>" +
-      "Before voting, challenge one player.<br><br>" +
-      "Challenge a Killer → the Killer dies.<br>" +
-      "Challenge Good, Innocent, or Fool → you die.";
-
-  }
-
-  else {
-
-    roleElement.className = "role good";
-
-    description.innerHTML =
-      "👤 You are <b>Innocent</b>.<br><br>" +
-      "Find the Killers and survive.";
-
-  }
+function renderHome(){
+ document.getElementById("app").innerHTML=`
+ <div class="card">
+ <h2>Create Game</h2>
+ <input id="host" placeholder="Your name" maxlength="20">
+ <input id="count" type="number" min="7" max="20" value="8">
+ <button onclick="startGame()">START GAME</button>
+ <p class="center small">Minimum 7 players</p>
+ <p class="center">🔪 3 Killers • 🔎 Detective • 🩺 Doctor<br>🤡 Fool • ⚔️ Challenger • 🧑‍🤝‍🧑 Innocents</p>
+ </div>`;
 }
 
-function showGame() {
-
-  document
-    .getElementById("roleScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("gameScreen")
-    .classList.remove("hidden");
-
-  renderPlayers();
-
-  addLog("🌙 Night has begun.");
-
-  updatePhase();
+function startGame(){
+ const n=document.getElementById("host").value.trim()||"Player 1";
+ let count=parseInt(document.getElementById("count").value)||8;
+ count=Math.max(7,Math.min(20,count));
+ let names=[n];
+ for(let i=2;i<=count;i++) names.push("Player "+i);
+ let roles=["Killer","Killer","Killer","Detective","Doctor","Fool","Challenger"];
+ while(roles.length<count) roles.push("Innocent");
+ roles.sort(()=>Math.random()-.5);
+ game={players:names.map((name,i)=>({name,role:roles[i],alive:true})),
+ phase:"role",roleIndex:0,nightIndex:0,nightActions:[],doctorSaveUsed:false,doctorKillUsed:false,
+ detectiveResult:null,challengeUsed:false,foolWon:false,log:[]};
+ addLog("Game started.");
+ render();
 }
 
-function renderPlayers() {
-
-  const list =
-    document.getElementById("players");
-
-  list.innerHTML = "";
-
-  players.forEach((player, index) => {
-
-    const div =
-      document.createElement("div");
-
-    div.className = "player";
-
-    let status =
-      player.alive ? "🟢 Alive" : "💀 Eliminated";
-
-    div.innerHTML =
-      "<b>" +
-      player.name +
-      "</b><br>" +
-      status;
-
-    list.appendChild(div);
-  });
+function renderRole(){
+ const p=game.players[game.roleIndex], r=roleInfo[p.role];
+ document.getElementById("app").innerHTML=`
+ <div class="card">
+ <h2>Your Secret Role</h2>
+ <div class="role">${r.emoji} ${p.role}</div>
+ <p class="center"><b>${esc(p.name)}</b></p>
+ <p class="center">${r.desc}</p>
+ <button onclick="nextRole()">Continue</button>
+ <p class="small center">Pass the phone only after the player has read their role.</p>
+ </div>`;
+}
+function nextRole(){
+ game.roleIndex++;
+ if(game.roleIndex>=game.players.length){game.phase="night";game.nightIndex=0;addLog("🌙 Night has begun.");}
+ render();
 }
 
-function updatePhase() {
-
-  const title =
-    document.getElementById("phaseTitle");
-
-  const text =
-    document.getElementById("phaseText");
-
-  if (phase === "night") {
-
-    title.textContent = "🌙 Night Phase";
-
-    if (myRole === "Killer") {
-
-      text.textContent =
-        "Choose a player to eliminate.";
-
-      showAction(
-        "🔪 Killer Action",
-        "Choose your target.",
-        "killer"
-      );
-
-    }
-
-    else if (myRole === "Detective") {
-
-      text.textContent =
-        "Choose one player to investigate.";
-
-      showAction(
-        "🔎 Detective Investigation",
-        "Find out whether the player is Good or Bad.",
-        "detective"
-      );
-
-    }
-
-    else if (myRole === "Doctor") {
-
-      text.textContent =
-        "You have one Save and one Kill power.";
-
-      showDoctorActions();
-
-    }
-
-    else {
-
-      text.textContent =
-        "Stay quiet and survive the night.";
-
-      hideAction();
-
-    }
-
-  }
-
-  else if (phase === "challenge") {
-
-    title.textContent = "⚔️ Challenger Phase";
-
-    text.textContent =
-      "The Challenger may challenge one living player before voting.";
-
-    if (myRole === "Challenger") {
-
-      showAction(
-        "⚔️ Challenge",
-        "Choose a living player to challenge.",
-        "challenger"
-      );
-
-    } else {
-
-      hideAction();
-
-    }
-
-  }
-
-  else {
-
-    title.textContent = "☀️ Day Phase";
-
-    text.textContent =
-      "Discuss who you think is a Killer and vote.";
-
-    hideAction();
-  }
+function renderNight(){
+ // Find next role that needs a night action.
+ while(game.nightIndex<game.players.length){
+   const p=game.players[game.nightIndex];
+   if(!p.alive){game.nightIndex++;continue;}
+   if(p.role==="Killer"){
+     document.getElementById("app").innerHTML=`<div class="card"><h2>🌙 Killer Night Action</h2>
+     <p class="center">Pass the phone to a Killer. Choose one living non-Killer to eliminate.</p>
+     ${playerButtons(x=>x.role!=="Killer", "killerAction")}</div>`;
+     return;
+   }
+   if(p.role==="Detective"){
+     document.getElementById("app").innerHTML=`<div class="card"><h2>🔎 Detective Night Action</h2>
+     <p class="center">Choose one living player to investigate.</p>
+     ${playerButtons(x=>x!==p, "detectiveAction")}</div>`;
+     return;
+   }
+   if(p.role==="Doctor"){
+     document.getElementById("app").innerHTML=`<div class="card"><h2>🩺 Doctor Night Action</h2>
+     <p class="center">You may use each power once during the entire game.</p>
+     <div class="grid">
+     <div><b>Save</b>${game.doctorSaveUsed?"<p class='small'>Already used.</p>":playerButtons(x=>true,"doctorSave")}</div>
+     <div><b>Kill</b>${game.doctorKillUsed?"<p class='small'>Already used.</p>":playerButtons(x=>x!==p,"doctorKill")}</div>
+     </div>
+     <button class="secondary" onclick="doctorSkip()">Use no power tonight</button></div>`;
+     return;
+   }
+   game.nightIndex++;
+ }
+ resolveNight();
 }
 
-function showAction(title, text, type) {
+function killerAction(i){
+ game.nightActions.push({type:"kill",target:i});
+ addLog("🔪 The Killers chose a target.");
+ game.nightIndex++;
+ renderNight();
+}
+function detectiveAction(i){
+ const target=game.players[i];
+ game.detectiveResult={target:target.name,result:target.role==="Killer"?"BAD":"GOOD"};
+ game.nightActions.push({type:"detect",target:i});
+ addLog("🔎 The Detective investigated someone.");
+ game.nightIndex++;
+ renderNight();
+ showDetectiveResult();
+}
+function showDetectiveResult(){
+ const d=game.players.find(p=>p.role==="Detective");
+ document.getElementById("app").innerHTML=`<div class="card"><h2>🔎 Investigation Result</h2>
+ <div class="role">${game.detectiveResult.result}</div>
+ <p class="center">${esc(game.detectiveResult.target)} is ${game.detectiveResult.result==="BAD"?"BAD (Killer)":"GOOD"}.</p>
+ <button onclick="renderNight()">Continue</button></div>`;
+}
+function doctorSave(i){
+ game.doctorSaveUsed=true; game.nightActions.push({type:"save",target:i});
+ addLog("🩺 The Doctor used the save power.");
+ game.nightIndex++; renderNight();
+}
+function doctorKill(i){
+ game.doctorKillUsed=true; game.nightActions.push({type:"doctorKill",target:i});
+ addLog("🩺 The Doctor used the kill power.");
+ game.nightIndex++; renderNight();
+}
+function doctorSkip(){game.nightIndex++;renderNight();}
 
-  const card =
-    document.getElementById("actionCard");
-
-  document.getElementById("actionTitle")
-    .textContent = title;
-
-  document.getElementById("actionText")
-    .textContent = text;
-
-  const targets =
-    document.getElementById("actionTargets");
-
-  targets.innerHTML = "";
-
-  selectedTarget = null;
-
-  players.forEach((player, index) => {
-
-    if (!player.alive || index === 0) return;
-
-    const button =
-      document.createElement("button");
-
-    button.className = "target";
-
-    button.textContent = player.name;
-
-    button.onclick = function() {
-
-      selectedTarget = index;
-
-      document
-        .querySelectorAll(".target")
-        .forEach(x => x.classList.remove("selected"));
-
-      button.classList.add("selected");
-
-    };
-
-    targets.appendChild(button);
-  });
-
-  document
-    .getElementById("actionButton")
-    .dataset.type = type;
-
-  card.classList.remove("hidden");
+function resolveNight(){
+ let kills=[];
+ game.nightActions.filter(a=>a.type==="kill"||a.type==="doctorKill").forEach(a=>kills.push(a.target));
+ const saves=new Set(game.nightActions.filter(a=>a.type==="save").map(a=>a.target));
+ let killed=new Set();
+ kills.forEach(i=>{if(!saves.has(i))killed.add(i);});
+ killed.forEach(i=>{if(game.players[i].alive){game.players[i].alive=false;}});
+ if(killed.size) addLog("🌅 Night ended. Someone did not survive.");
+ else addLog("🌅 Night ended. Nobody was eliminated.");
+ game.nightActions=[];game.nightIndex=0;game.detectiveResult=null;
+ if(checkEnd()){render();return;}
+ game.phase="day";render();
+}
+function checkEnd(){
+ const w=winner();
+ if(w){game.phase="over";game.win=w;return true;}
+ return false;
 }
 
-function hideAction() {
-
-  document
-    .getElementById("actionCard")
-    .classList.add("hidden");
+function renderDay(){
+ document.getElementById("app").innerHTML=`<div class="card">
+ <h2>☀️ Day Phase</h2>
+ <p class="center">Discuss who you suspect. The Challenger may act before voting.</p>
+ <div>${game.players.map((p,i)=>`<div class="player">${esc(p.name)} — ${p.alive?'<span class="alive">Alive</span>':'<span class="dead">Dead</span>'}</div>`).join("")}</div>
+ ${!game.challengeUsed && game.players.some(p=>p.alive&&p.role==="Challenger")?
+ `<button onclick="challengeScreen()">⚔️ Challenger: Challenge Before Voting</button>`:""}
+ <button onclick="startVote()">🗳️ Start Voting</button>
+ <div class="log">${game.log.map(esc).map(x=>`<div>${x}</div>`).join("")}</div>
+ </div>`;
+}
+function challengeScreen(){
+ const c=game.players.find(p=>p.alive&&p.role==="Challenger");
+ if(!c){startVote();return;}
+ document.getElementById("app").innerHTML=`<div class="card">
+ <h2>⚔️ Challenger</h2><p class="center"><b>${esc(c.name)}</b>, choose ONE player to challenge.</p>
+ ${playerButtons(x=>x!==c,"doChallenge")}</div>`;
+}
+function doChallenge(i){
+ const c=game.players.find(p=>p.role==="Challenger"&&p.alive);
+ game.challengeUsed=true;
+ if(game.players[i].role==="Killer"){
+   game.players[i].alive=false; addLog("⚔️ Challenger successfully challenged a Killer. The Killer died.");
+ }else{
+   c.alive=false; addLog("⚔️ Challenger challenged the wrong player and died.");
+ }
+ if(checkEnd()){render();return;}
+ game.phase="vote";render();
 }
 
-function showDoctorActions() {
-
-  const card =
-    document.getElementById("actionCard");
-
-  const targets =
-    document.getElementById("actionTargets");
-
-  document.getElementById("actionTitle")
-    .textContent = "🩺 Doctor Powers";
-
-  document.getElementById("actionText")
-    .textContent =
-    "You may use one Save and one Kill.";
-
-  targets.innerHTML = "";
-
-  if (!doctorSaveUsed) {
-
-    const save =
-      document.createElement("button");
-
-    save.textContent = "🛡️ Use Save";
-
-    save.onclick = function() {
-
-      doctorSaveUsed = true;
-
-      addLog("🩺 Doctor used the Save power.");
-
-      alert("Save power used.");
-
-    };
-
-    targets.appendChild(save);
-  }
-
-  if (!doctorKillUsed) {
-
-    const kill =
-      document.createElement("button");
-
-    kill.textContent = "☠️ Use Kill";
-
-    kill.onclick = function() {
-
-      showAction(
-        "☠️ Doctor Kill",
-        "Choose a player to eliminate.",
-        "doctorKill"
-      );
-
-    };
-
-    targets.appendChild(kill);
-  }
-
-  card.classList.remove("hidden");
+function startVote(){game.phase="vote";render();}
+function renderVote(){
+ document.getElementById("app").innerHTML=`<div class="card">
+ <h2>🗳️ Vote to Lynch</h2>
+ <p class="center">Choose the player the group wants to lynch.</p>
+ ${playerButtons(x=>true,"lynch")}
+ </div>`;
+}
+function lynch(i){
+ const p=game.players[i];
+ p.alive=false;
+ if(p.role==="Fool"){
+   game.foolWon=true;addLog("🤡 The Fool was lynched and wins!");
+ }else addLog("🗳️ The group lynched a player.");
+ if(checkEnd()){render();return;}
+ game.phase="night";game.nightIndex=0;game.challengeUsed=false;addLog("🌙 Night has begun.");render();
 }
 
-function confirmAction() {
-
-  const type =
-    document.getElementById("actionButton")
-      .dataset.type;
-
-  if (selectedTarget === null) {
-
-    alert("Choose a player first.");
-
-    return;
-  }
-
-  const target =
-    players[selectedTarget];
-
-  if (!target || !target.alive) {
-
-    alert("That player is no longer alive.");
-
-    return;
-  }
-
-  if (type === "killer") {
-
-    addLog(
-      "🔪 Killer selected " +
-      target.name +
-      " as a target."
-    );
-
-    alert(
-      "Target selected: " +
-      target.name
-    );
-
-  }
-
-  else if (type === "detective") {
-
-    const alignment =
-      isBad(target.role) ? "BAD" : "GOOD";
-
-    addLog(
-      "🔎 Detective investigated " +
-      target.name +
-      "."
-    );
-
-    alert(
-      target.name +
-      " is " +
-      alignment +
-      "."
-    );
-
-  }
-
-  else if (type === "doctorKill") {
-
-    doctorKillUsed = true;
-
-    target.alive = false;
-
-    addLog(
-      "☠️ Doctor used the Kill power."
-    );
-
-    renderPlayers();
-
-    alert(
-      target.name +
-      " has been eliminated."
-    );
-
-    hideAction();
-  }
-
-  else if (type === "challenger") {
-
-    resolveChallenge(selectedTarget);
-
-  }
+function renderOver(){
+ let title=game.win==="Fool"?"🤡 Fool Wins!":game.win==="Killers"?"🔪 Killers Win!":"🧑‍🤝‍🧑 Good Team Wins!";
+ let desc=game.win==="Fool"?"The Fool achieved the only goal: getting lynched.":game.win==="Killers"?"The Killers have reached parity with the living good team.":"All Killers have been eliminated.";
+ document.getElementById("app").innerHTML=`<div class="card center">
+ <h2>${title}</h2><p>${desc}</p>
+ <h3>Roles</h3>${game.players.map(p=>`<div class="player">${esc(p.name)} — <b>${roleInfo[p.role].emoji} ${p.role}</b> — ${p.alive?"Alive":"Dead"}</div>`).join("")}
+ <button onclick="game=null;render()">New Game</button>
+ </div>`;
 }
-
-function resolveChallenge(index) {
-
-  const target =
-    players[index];
-
-  if (!target || !target.alive) return;
-
-  if (target.role === "Killer") {
-
-    target.alive = false;
-
-    addLog(
-      "⚔️ The Challenger successfully found a Killer!"
-    );
-
-    alert(
-      "The Challenger was correct. " +
-      target.name +
-      " was a Killer and has been eliminated."
-    );
-
-  }
-
-  else {
-
-    players[0].alive = false;
-
-    addLog(
-      "⚔️ The Challenger challenged the wrong player."
-    );
-
-    alert(
-      "The Challenger was wrong and has been eliminated."
-    );
-  }
-
-  renderPlayers();
-
-  hideAction();
-
-  phase = "day";
-
-  updatePhase();
-}
-
-function isBad(role) {
-
-  return role === "Killer";
-}
-
-function addLog(message) {
-
-  const log =
-    document.getElementById("log");
-
-  const entry =
-    document.createElement("div");
-
-  entry.innerHTML =
-    message + "<hr>";
-
-  log.prepend(entry);
-}
-
+render();
 </script>
-
 </body>
 </html>
